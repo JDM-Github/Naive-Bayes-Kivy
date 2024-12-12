@@ -1,7 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
-
 a = Analysis(
     ['main.py'],
     pathex=[],
@@ -11,7 +10,15 @@ a = Analysis(
         ('Assets/*', 'Assets'),
         ('binary/*', 'binary'),
     ],
-    hiddenimports=[],
+    hiddenimports=[
+        'sklearn', 
+        'sklearn.naive_bayes',
+        'sklearn.feature_extraction.text',  # Add this
+        'sklearn.utils._typedefs',         # Add common missing utils
+        'sklearn.utils._heap',             # Add common missing utils
+        'scipy.sparse.csgraph._validation', # Add scipy dependencies
+        'win32timezone'
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -19,8 +26,8 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
-pyz = PYZ(a.pure)
 
+pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
@@ -40,5 +47,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon.png' 
 )

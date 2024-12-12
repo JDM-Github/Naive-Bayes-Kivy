@@ -11,15 +11,21 @@ Config.write()
 from kivy.core.window import Window
 Window.size = (1300, 700)
 
-from kivymd.app import MDApp
+# from kivymd.app import MDApp
+from kivy.app import App
 from kivy.uix.widget import Widget
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.graphics import Color, Ellipse, RoundedRectangle
 from kivy.uix.popup import Popup
-from kivymd.uix.filemanager import MDFileManager
+# from kivymd.uix.filemanager import MDFileManager
 from kivy.animation import Animation
 from kivy.properties import NumericProperty, StringProperty
+
+from kivy.uix.filechooser import FileChooserListView
+from kivy.uix.popup import Popup
+from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
 
 import pandas as pd
 from kivy.lang import Builder
@@ -65,24 +71,38 @@ class MainWidget(Widget):
     def on_image_click(self):
         self.open_file_manager()
 
-    # OPEN THE MDFileManager
     def open_file_manager(self):
-        self.file_manager = MDFileManager(
-            exit_manager=self.exit_file_manager,
-            select_path=self.select_file,
-        )
-        self.file_manager.show('/')
+        self.file_chooser = FileChooserListView()
+        self.file_chooser.path = '/' 
+        self.file_chooser.filters = ['*.csv']
 
-    def select_file(self, path):
-        if path.endswith('.csv'):
-            self.full_comments_file = path
-            print(f"File selected: {path}")
-        else:
-            self.show_error_popup("Invalid file type", "Please select a CSV file.")
-        self.file_manager.close()
+        select_button = Button(text="Select", on_press=self.select_file)
+        layout = BoxLayout(orientation='vertical')
+        layout.add_widget(self.file_chooser)
+        layout.add_widget(select_button)
+
+        self.popup = Popup(
+            title="Select a File",
+            content=layout,
+            size_hint=(0.9, 0.9),
+            auto_dismiss=False
+        )
+        self.popup.open()
+
+    def select_file(self, instance):
+        selected_path = self.file_chooser.selection
+        if selected_path:
+            path = selected_path[0]
+            if path.endswith('.csv'):
+                self.full_comments_file = path
+                print(f"File selected: {path}")
+            else:
+                self.show_error_popup("Invalid file type", "Please select a CSV file.")
+        self.popup.dismiss()
 
     def exit_file_manager(self, *args):
-        self.file_manager.close()
+        # self.file_manager.close()
+        pass
 
     def simplify_text(self, text):
         """Simplifies text by removing numbers, punctuation, and stopwords."""
@@ -131,13 +151,16 @@ class MainWidget(Widget):
                         result.append(category_data)
 
                     for subcat in subcategories:
-                        if "Feedback" not in category:  
-                            stars = int(row[row_index]) 
-                            category_data["subcategories"].append({"subcategory": subcat, "stars": stars})
-                        else:
-                            feedback = row[row_index]
-                            category_data["subcategories"].append({"subcategory": subcat, "text": feedback})
-                        row_index += 1
+                        try:
+                            if "Feedback" not in category: 
+                                stars = int(row[row_index]) 
+                                category_data["subcategories"].append({"subcategory": subcat, "stars": stars})
+                            else:
+                                feedback = row[row_index]
+                                category_data["subcategories"].append({"subcategory": subcat, "text": feedback})
+                            row_index += 1
+                        except:
+                            pass
         return result
 
     def aggregate_subcategories(self, subcategories):
@@ -176,7 +199,29 @@ class MainWidget(Widget):
         except Exception as e:
             self.show_error_popup("File Read Error", f"Error reading the file: {e}")
             return
+    
+        full_df.columns = full_df.columns.str.lower()
+        target = None
 
+        # CHECK IF ONE OF THE COLUMN IS COMMENT, COMMENTS, REVIEW, TEXT
+        if 'comment' in full_df.columns:
+            target = full_df['comment']
+
+        elif 'comments' in full_df.columns:
+            target = full_df['comments']
+
+        elif 'review' in full_df.columns:
+            target = full_df['review']
+
+        elif 'text' in full_df.columns:
+            target = full_df['text']
+
+        if target is None:
+            self.show_error_popup("Missing Column", "The file must contain a 'comment, review, text' column.")
+            return
+
+        target = target.fillna('Unknown')
+        predicted_sentiments = []
 
         self.current_index = 0
         self.sub_current_index = 0
@@ -184,9 +229,9 @@ class MainWidget(Widget):
 
         if self.structured_data:
             self.category_name = self.structured_data[self.current_index].get('category', 'Unknown Category')
-            
+
             self.sub_category_list = self.aggregate_subcategories(self.structured_data[self.current_index].get('subcategories', []))
-            
+
             if self.sub_category_list:
                 data = self.sub_category_list[self.sub_current_index]
                 total_votes = sum(data['stars'])
@@ -233,30 +278,6 @@ class MainWidget(Widget):
                 print("Warning: No subcategories available.")
         else:
             print("Warning: No data available in structured data.")
-
-        # GET ALL THE COLUMNS AND LOWER IT
-        full_df.columns = full_df.columns.str.lower()
-        target = None
-
-        # CHECK IF ONE OF THE COLUMN IS COMMENT, COMMENTS, REVIEW, TEXT
-        if 'comment' in full_df.columns:
-            target = full_df['comment']
-
-        elif 'comments' in full_df.columns:
-            target = full_df['comments']
-
-        elif 'review' in full_df.columns:
-            target = full_df['review']
-
-        elif 'text' in full_df.columns:
-            target = full_df['text']
-
-        if target is None:
-            self.show_error_popup("Missing Column", "The file must contain a 'comment, review, text' column.")
-            return
-
-        target = target.fillna('Unknown')
-        predicted_sentiments = []
 
         # GET ALL PREDICTED COMMENT
         for comment in target:
@@ -472,7 +493,7 @@ class MainWidget(Widget):
     def close_popup(self, instance):
         self.popup.dismiss()
 
-class MainApp(MDApp):
+class MainApp(App):
 
     def build(self):
         # MAIN APPLICATION, MAKE THE DRAG FEATURE WORK
