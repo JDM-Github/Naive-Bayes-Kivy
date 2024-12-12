@@ -51,7 +51,6 @@ class MainWidget(Widget):
     category_name = StringProperty("NONE")
     subcategory_name = StringProperty("")
 
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.naiveBayes = None
@@ -61,7 +60,6 @@ class MainWidget(Widget):
         self.model = joblib.load('binary/naive_bayes_model.joblib')
         self.vectorizer = joblib.load('binary/tfidf_vectorizer.joblib')
         self.encoder = joblib.load('binary/label_encoder.joblib')
-
 
     # ONLY USE WHEN YOU CLICK THE CSV IMAGE
     def on_image_click(self):
@@ -85,8 +83,7 @@ class MainWidget(Widget):
 
     def exit_file_manager(self, *args):
         self.file_manager.close()
-    
-    
+
     def simplify_text(self, text):
         """Simplifies text by removing numbers, punctuation, and stopwords."""
         return text.lower().replace(" ", "").strip()
@@ -95,7 +92,6 @@ class MainWidget(Widget):
         """Smart categorization of columns into categories."""
         category_map = defaultdict(list)
         current_category = None
-
         for col_name in header[4:]:
             simplified_name = self.simplify_text(col_name)
 
@@ -116,10 +112,7 @@ class MainWidget(Widget):
             else:
                 current_category = "Other" 
             category_map[current_category].append(col_name)
-
         return category_map
-
-
 
     def process_csv_to_3d_list(self, csv_file):
         result = []
@@ -251,10 +244,10 @@ class MainWidget(Widget):
 
         elif 'comments' in full_df.columns:
             target = full_df['comments']
-        
+
         elif 'review' in full_df.columns:
             target = full_df['review']
-        
+
         elif 'text' in full_df.columns:
             target = full_df['text']
 
@@ -274,17 +267,17 @@ class MainWidget(Widget):
 
             # GET THE PROBABILITY OF NEUTRALITY
             neutral_prob = prediction_probabilities[0][0] < 0.58 and prediction_probabilities[0][1] < 0.58
-            
+
             # IF POSSIBLE TO BE NEUTRAL
             if neutral_prob:
                 sentiment = 'Neutral'
             else:
                 prediction = model.predict(transformed_comment)
                 sentiment = encoder.inverse_transform(prediction)[0]
-            
+
             # RETURN THE NEUTRAL
             predicted_sentiments.append(sentiment)
-        
+
         # LOAD EVERYTHING
         full_df['Predicted_Sentiment'] = predicted_sentiments
         positive_comments = full_df[full_df['Predicted_Sentiment'] == 'Positive']
@@ -319,7 +312,7 @@ class MainWidget(Widget):
 
         # DRAW THE PIE CHART
         self.draw_pie_chart([self.negative_percent, self.neutral_percent, self.positive_percent])
-    
+
     def prev_subcategory(self):
         if self.sub_current_index > 0:
             self.sub_current_index -= 1
@@ -349,10 +342,10 @@ class MainWidget(Widget):
         try:
             if self.structured_data and self.current_index < len(self.structured_data):
                 self.category_name = self.structured_data[self.current_index].get('category', 'Unknown Category')
-                
+
                 subcategories = self.structured_data[self.current_index].get('subcategories', [])
                 self.sub_category_list = self.aggregate_subcategories(subcategories)
-                
+
                 if self.sub_category_list and 0 <= self.sub_current_index < len(self.sub_category_list):
                     data = self.sub_category_list[self.sub_current_index]
                     total_votes = sum(data['stars'])
@@ -424,7 +417,6 @@ class MainWidget(Widget):
             anim.start(rect)
         animate_rectangle()
 
-
     def draw_pie_chart(self, data):
         total = sum(data)
         colors = [
@@ -436,7 +428,6 @@ class MainWidget(Widget):
         engagement.canvas.clear()
 
         self.animate_pie(engagement, colors, 0, 0, data, total)
-
 
     # ANIMATION OF PIE CHART BEING DRAWN
     def animate_pie(self, engagement, colors, index, start_angle, data, total):
@@ -480,7 +471,6 @@ class MainWidget(Widget):
 
     def close_popup(self, instance):
         self.popup.dismiss()
-
 
 class MainApp(MDApp):
 
