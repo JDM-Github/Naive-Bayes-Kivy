@@ -50,7 +50,7 @@ class MainWidget(Widget):
     result_text = StringProperty("NONE")
     result_color = StringProperty("#ffffff")
 
-    max_percent_label = StringProperty("POSITIVE")
+    max_percent_label = StringProperty("")
     max_percent = NumericProperty(0)
 
     full_comments_file = StringProperty("")

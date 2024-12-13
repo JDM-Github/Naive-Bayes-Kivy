@@ -481,6 +481,24 @@
                             text: str(root.max_percent) + "%"
                             bold: True
                         Widget:
+                            size_hint_y: None
+                            height: dp(10)
+                        Label:
+                            size_hint_y: None
+                            height: dp(20)
+                            text:
+                                "The event was well-recieved and achieved its goal. Great work!" if root.max_percent_label == 'POSITIVE' else \
+                                "The event was moderately successful, but there's room for improvement" if root.max_percent_label == 'NEUTRAL' else \
+                                "The event faced challenges. Identify specific issues and address them to improve future experiences" if root.max_percent_label == 'NEGATIVE' else ''
+                            bold: True
+                            halign: 'center'
+                            text_size: self.width * 0.9, None
+                            font_size: sp(12)
+                            color: 
+                                (0.52, 0.81, 0.44) if root.max_percent_label == 'POSITIVE' else \
+                                (0.75, 0.75, 0.25) if root.max_percent_label == 'NEUTRAL' else \
+                                (0.85, 0.25, 0.25)
+                        Widget:
                 GridLayout:
                     cols: 2
 
