@@ -6,10 +6,12 @@ from kivy.config import Config
 Config.set('graphics', 'width', 1300)
 Config.set('graphics', 'height', 700)
 Config.set('graphics', 'fullscreen', 0)
+Config.set('graphics', 'resizable', 1)
+Config.set('graphics', 'window_state', 'normal')
 Config.write()
 
 from kivy.core.window import Window
-Window.size = (1300, 700)
+Window.size = (1300, 750)
 
 # from kivymd.app import MDApp
 from kivy.app import App
@@ -20,7 +22,7 @@ from kivy.graphics import Color, Ellipse, RoundedRectangle
 from kivy.uix.popup import Popup
 # from kivymd.uix.filemanager import MDFileManager
 from kivy.animation import Animation
-from kivy.properties import NumericProperty, StringProperty
+from kivy.properties import NumericProperty, StringProperty, BooleanProperty
 
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.popup import Popup
@@ -29,7 +31,19 @@ from kivy.uix.boxlayout import BoxLayout
 
 import pandas as pd
 from kivy.lang import Builder
+
 Builder.load_file('design.kv')
+
+class ResponsiveBox(BoxLayout):
+    will_adjust = BooleanProperty(True)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Window.bind(size=self.adjust_orientation)
+
+    def adjust_orientation(self, *args):
+        if self.will_adjust:
+            self.orientation = 'vertical' if Window.width < 900 else 'horizontal'
+            self.height = 600 if Window.width < 900 else 350
 
 class MainWidget(Widget):
 
